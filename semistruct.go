@@ -147,7 +147,7 @@ func tags() *p.Grammar {
 // the alphaNum value
 func kvpair() *p.Grammar {
 	o := p.And(
-		p.Tag("key", alpha()),
+		p.Tag("key", alphaNum()),
 		p.Lit("="),
 		p.Tag(
 			"value",
