@@ -11,10 +11,7 @@ type testpair struct {
 	logline string
 }
 
-// TODO: add property tests for the individual combinators for the
-// combinator as a whole.
-
-// Set of hand-written lines
+// Hand-written unit tests for common cases this human can think of.
 var tests = []testpair{
 	{`!< 2 [cl7323:featstore:sess_fun] { one=two dos="wah=hh-77" } >!`},
 	{`!< 7 [local:pktproc:parsePkt] { proto=icmp error="unassigned_type" action=dropped } >!`},
@@ -41,6 +38,7 @@ func TestParser(t *testing.T) {
 	}
 }
 
+// Gopter property tests.
 func TestParserProperties(t *testing.T) {
 	p := semistruct_parser()
 
@@ -49,6 +47,8 @@ func TestParserProperties(t *testing.T) {
 	parameters.MinSuccessfulTests = 100
 	logLineProperties := gopter.NewProperties(parameters)
 
+	// Test the whole log line parsing behavior, each property is
+	// generated and composed together then a parse is attempted.
 	logLineProperties.Property("arbitrary log line", prop.ForAll(
 		func(priority int16, tags []string, attrs map[string]string) bool {
 			l := mkLogLine(
@@ -66,9 +66,12 @@ func TestParserProperties(t *testing.T) {
 
 	logLineProperties.TestingRun(t)
 
-	parameters.MinSuccessfulTests = 1000
+	parameters.MinSuccessfulTests = 5000
 	properties := gopter.NewProperties(parameters)
 
+	// Test parsing a log line arbitrarily generating just a single
+	// property of each "piece" of a log line (the priority, tags, or
+	// attributes).
 	properties.Property("log level priority indicator", prop.ForAll(
 		func(priority int16) bool {
 			l := mkLogLine(
