@@ -192,6 +192,29 @@ func Tags() *p.Grammar {
 // Order within the Or combinator is important here, we want to try
 // matching the quoted alphaNumSpecial value first before then attempt
 // the unquoted plain alphaNum value.
+func Attrs() *p.Grammar {
+	o := p.Optional(
+		p.And(
+			p.Ignore(p.Lit("{")),
+			SkipSpace(),
+			p.Tag("attrmap", Kvpairs()),
+			SkipSpace(),
+			p.Ignore(p.Lit("}")),
+		),
+	)
+
+	o.Node(func(m p.Match) (p.Match, error) {
+		attrmap := p.GetTag(m, "attrmap")
+		if attrmap == nil {
+			attrmap = make(map[string]string)
+		}
+
+		return attrmap, nil
+	})
+
+	return o
+}
+
 func Kvpair() *p.Grammar {
 	o := p.And(
 		p.Tag("key", AlphaNum()),
@@ -231,28 +254,5 @@ func Kvpairs() *p.Grammar {
 		}
 		return attrmap, nil
 	})
-	return o
-}
-
-func Attrs() *p.Grammar {
-	o := p.Optional(
-		p.And(
-			p.Ignore(p.Lit("{")),
-			SkipSpace(),
-			p.Tag("attrmap", Kvpairs()),
-			SkipSpace(),
-			p.Ignore(p.Lit("}")),
-		),
-	)
-
-	o.Node(func(m p.Match) (p.Match, error) {
-		attrmap := p.GetTag(m, "attrmap")
-		if attrmap == nil {
-			attrmap = make(map[string]string)
-		}
-
-		return attrmap, nil
-	})
-
 	return o
 }
