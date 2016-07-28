@@ -120,7 +120,7 @@ func TestParserProperties(t *testing.T) {
 			res, _ := p.ParseString(l)
 			return res != nil
 		},
-		MapOf(gen.Identifier(), AlphaNumSymbol()),
+		MapOf(gen.Identifier(), AlphaNumSpecial()),
 	))
 
 	// TODO: provide a shrinker

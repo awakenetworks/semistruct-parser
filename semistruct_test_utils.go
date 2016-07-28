@@ -9,35 +9,49 @@ import (
 	"unicode"
 )
 
-func mkAttrStr(m map[string]string, quoted bool) string {
+// Produce a bracketed attribute string given a map.
+//
+// Ex: map[string]string{ab:"age 22", an:bl} -> { ab="age 22" an=bl }
+func mkAttrStr(m map[string]string, q bool) string {
 	var acc []string
 	for k, v := range m {
-		var st string
-		if quoted {
-			st = fmt.Sprintf("%s=\"%s\"", k, v)
-		} else {
-			st = fmt.Sprintf("%s=%s", k, v)
+		if q {
+			v = fmt.Sprint("\"", v, "\"")
 		}
-		acc = append(acc, st)
+		acc = append(acc, fmt.Sprintf("%s=%s", k, v))
 	}
-	return fmt.Sprint("{ ", strings.Join(acc[:], " "), " }")
+
+	attrs := strings.Join(acc[:], " ")
+	return fmt.Sprint("{ ", attrs, " }")
 }
 
+// Produce a tag list given a slice of strings.
+//
+// Ex: []string{"one", "two", "three"} -> [one:two:three]
 func mkTagStr(t []string) string {
 	tags := strings.Join(t[:], ":")
 	return fmt.Sprint("[", tags, "]")
 }
 
+// Produce a parseable log line given a priority integer, a tag string
+// and an attribute string.
 func mkLogLine(priority int16, tags string, attrs string) string {
 	return fmt.Sprintf("!< %d %s %s >!", priority, tags, attrs)
 }
 
-// TODO: their primary example of combining the rune generators is
+// Generate an arbitrary rune selected from the valid set of symbols,
+// punctuation, and "other" runes.
+//
+// NOTE: this excludes the double quote character explicitly because
+// we cannot parse it within the double quoted string, we can change
+// the attribute value format if we need to to accomodate double
+// quotes within the values, though.
+//
+// TODO: Gopter's primary example of combining the rune generators is
 // with the Frequency function but I don't actually want to use that
-// in order to compose all of these rune generators. CombineGens
-// doesn't like these RuneRanges so I think I have to put each one
-// into a separate "gen"...
-func SymbolChar() gopter.Gen {
+// in order to compose all of these rune generators. Some more API
+// spelunking is needed... This works for now, though.
+func SpecialChar() gopter.Gen {
 	return gen.Frequency(map[int]gopter.Gen{
 		0: gen.RuneRange('#', '/'),
 		1: gen.RuneRange(':', '?'),
@@ -48,10 +62,16 @@ func SymbolChar() gopter.Gen {
 	})
 }
 
-func AlphaNumSymbol() gopter.Gen {
+// Generate an arbitrary rune selected from the valid set of alphanum
+// and special character runes.
+//
+// TODO: make sure the unicode character tests are complete and
+// exhaustive for the sieve. This is important for complete property
+// test coverage.
+func AlphaNumSpecial() gopter.Gen {
 	return gopter.CombineGens(
 		gen.SliceOf(gen.AlphaNumChar()),
-		gen.SliceOf(SymbolChar()),
+		gen.SliceOf(SpecialChar()),
 	).Map(func(values []interface{}) string {
 		alpha := values[0].([]rune)
 		symb := values[1].([]rune)
@@ -90,6 +110,11 @@ func runesToString(v []rune) string {
 	return string(v)
 }
 
+// Generate an arbitrary map data structure given a key element
+// generator and a value element generator. The number of pairs within
+// the map is determined using gopter's internal Rng state.
+//
+// For a fixed-size generator of maps, please see MapOfN.
 func MapOf(keyGen gopter.Gen, valGen gopter.Gen) gopter.Gen {
 	return func(genParams *gopter.GenParameters) *gopter.GenResult {
 		len := 0
@@ -108,6 +133,12 @@ func MapOf(keyGen gopter.Gen, valGen gopter.Gen) gopter.Gen {
 	}
 }
 
+// Generate an arbitrary map data structure given a length argument
+// specifying the fixed number of pairs we wish to be generated for
+// the map and a key element generator and a value element generator.
+//
+// For a generator that produces arbitrarily-sized maps, please see
+// MapOf.
 func MapOfN(len int, keyGen gopter.Gen, valGen gopter.Gen) gopter.Gen {
 	return func(genParams *gopter.GenParameters) *gopter.GenResult {
 		//result, keySieve, valSieve, keyShrinker, valShrinker := genMap(keyGen, valGen, genParams, len)
@@ -121,22 +152,15 @@ func MapOfN(len int, keyGen gopter.Gen, valGen gopter.Gen) gopter.Gen {
 	}
 }
 
-// Generate a Map of the type specified by the keyGen and ValueGen
-// functions. Reflection is used heavily here in order to dynamically
-// create a map based on the types of the reflected key and value
-// generator types.
+// Generate a map given a key element generator, value element
+// generator, and a length specifying the number of pairs we want the
+// map to hold.
 //
-// This was ripped off from gopter's stock genSlice function which
-// looks very similar.
+// This was ripped off of Gopter's genSlice function and expanded to
+// accomodate the map data structure.
 func genMap(keyGen gopter.Gen, valGen gopter.Gen, genParams *gopter.GenParameters, len int) (reflect.Value, func(interface{}) bool, func(interface{}) bool, gopter.Shrinker, gopter.Shrinker) {
 	key := keyGen(genParams)
 	val := valGen(genParams)
-
-	keySieve := key.Sieve
-	valSieve := val.Sieve
-
-	keyShrinker := key.Shrinker
-	valShrinker := val.Shrinker
 
 	result := reflect.MakeMap(reflect.MapOf(key.ResultType, val.ResultType))
 
@@ -152,5 +176,9 @@ func genMap(keyGen gopter.Gen, valGen gopter.Gen, genParams *gopter.GenParameter
 		val = valGen(genParams)
 	}
 
-	return result, keySieve, valSieve, keyShrinker, valShrinker
+	// TODO: I wonder if there's a better way to return all of these -
+	// perhaps just returning the key and val itself would be nice so
+	// we're not generating these big tuple return types that need to
+	// be unpacked...
+	return result, key.Sieve, val.Sieve, key.Shrinker, val.Shrinker
 }

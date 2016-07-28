@@ -14,6 +14,41 @@ type kv_pair struct {
 	val string
 }
 
+// Parse a semistructured log line into the semistruct_log struct
+// type.
+func semistruct_parser() *p.Grammar {
+	o := p.And(
+		// Parse opening sentinel "!<"
+		openSentinel(),
+		skipSpace(),
+
+		// Parse our log-level priority
+		p.Tag("priority", priorityInt()),
+		skipSpace(),
+
+		// Parse our tag list "[tag1:tag2:tag3]"
+		p.Tag("tags", tags()),
+		skipSpace(),
+
+		// Parse our attribute set "{ key=val key2=val2 }"
+		p.Tag("attrs", attrs()),
+		skipSpace(),
+
+		// Parse the ending sentinel ">!"
+		endSentinel(),
+	)
+
+	o.Node(func(m p.Match) (p.Match, error) {
+		pr := p.GetTag(m, "priority").(int64)
+		tg := p.GetTag(m, "tags").([]string)
+		at := p.GetTag(m, "attrs").(map[string]string)
+
+		return semistruct_log{pr, tg, at}, nil
+	})
+
+	return o
+}
+
 // TODO: Make sure all fields in the schema that are optional are
 // handled in here with good mempty-like defaults (or is there an
 // option type analog in Go?).
@@ -55,7 +90,7 @@ func alphaNum() *p.Grammar {
 // Parse zero or more characters that are alpha-numeric, space
 // characters, and special characters (note, \w includes the
 // underscore).
-func alphaSpecial() *p.Grammar {
+func alphaNumSpecial() *p.Grammar {
 	return p.Mult(
 		0, 0,
 		p.Set("\\w\\s\\-~`!@#:;\\$%^&\\*\\(\\)\\+=\\?\\\\/><,\\.\\{\\}\\[\\]\\|'"),
@@ -73,7 +108,7 @@ func alpha() *p.Grammar {
 func quotedStr() *p.Grammar {
 	return p.And(
 		p.Ignore(p.Lit("\"")),
-		alphaSpecial(),
+		alphaNumSpecial(),
 		p.Ignore(p.Lit("\"")),
 	)
 }
@@ -142,16 +177,28 @@ func tags() *p.Grammar {
 	return o
 }
 
-// NOTE: order within the Or combinator is important here, we want
-// to try matching the alphaNum value first before then attempting
-// the alphaNum value
+// Parse a key value pair separated by an equal sign.
+//
+// Two types of values are supported by the parser: a quoted string
+// value and an unquoted string value. The quoted string may contain
+// spaces and many special characters.
+//
+// The unquoted value string may contain: a-zA-Z0-9_-
+//
+// The unquoted version should be able to contain the other special
+// characters too but supporting that or not wasn't specified so I
+// kept the unquoted version for very simple strings.
+//
+// Order within the Or combinator is important here, we want to try
+// matching the quoted alphaNumSpecial value first before then attempt
+// the unquoted plain alphaNum value.
 func kvpair() *p.Grammar {
 	o := p.And(
 		p.Tag("key", alphaNum()),
 		p.Lit("="),
 		p.Tag(
 			"value",
-			p.Or(quotedStr(), alphaNum()),
+			p.Or(quotedStr(), alphaNumSpecial()),
 		),
 	)
 
@@ -205,40 +252,6 @@ func attrs() *p.Grammar {
 		}
 
 		return attrmap, nil
-	})
-
-	return o
-}
-
-// Top-level semi-structured log line parser combinator
-func semistruct_parser() *p.Grammar {
-	o := p.And(
-		// Parse opening sentinel "!<"
-		openSentinel(),
-		skipSpace(),
-
-		// Parse our log-level priority
-		p.Tag("priority", priorityInt()),
-		skipSpace(),
-
-		// Parse our tag list "[tag1:tag2:tag3]"
-		p.Tag("tags", tags()),
-		skipSpace(),
-
-		// Parse our attribute set "{ key=val key2=val2 }"
-		p.Tag("attrs", attrs()),
-		skipSpace(),
-
-		// Parse the ending sentinel ">!"
-		endSentinel(),
-	)
-
-	o.Node(func(m p.Match) (p.Match, error) {
-		pr := p.GetTag(m, "priority").(int64)
-		tg := p.GetTag(m, "tags").([]string)
-		at := p.GetTag(m, "attrs").(map[string]string)
-
-		return semistruct_log{pr, tg, at}, nil
 	})
 
 	return o
