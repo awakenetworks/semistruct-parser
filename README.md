@@ -1,7 +1,7 @@
 # Welcome!
 
 `semistruct-parse` is a project providing a parser for semistructured lines of
-text. These are primarily used at Awake Networks in a custom journald logging
+text. These are primarily used in a custom journald logging
 driver for the purpose of feeding semistructured data into journald from docker.
 
 ## The Format
