@@ -29,7 +29,7 @@ var tests = []testpair{
 }
 
 func TestParser(t *testing.T) {
-	p := semistruct_parser()
+	p := ParseSemistruct()
 
 	for _, pair := range tests {
 		res, _ := p.ParseString(pair.logline)
@@ -43,7 +43,7 @@ func TestParser(t *testing.T) {
 
 // Gopter property tests.
 func TestParserProperties(t *testing.T) {
-	p := semistruct_parser()
+	p := ParseSemistruct()
 
 	parameters := gopter.DefaultTestParameters()
 
@@ -120,7 +120,7 @@ func TestParserProperties(t *testing.T) {
 			res, _ := p.ParseString(l)
 			return res != nil
 		},
-		MapOf(gen.Identifier(), AlphaNumSpecial()),
+		MapOf(gen.Identifier(), AlphaNumSpecialString()),
 	))
 
 	// TODO: provide a shrinker

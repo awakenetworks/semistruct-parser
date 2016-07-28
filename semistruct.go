@@ -16,26 +16,26 @@ type kv_pair struct {
 
 // Parse a semistructured log line into the semistruct_log struct
 // type.
-func semistruct_parser() *p.Grammar {
+func ParseSemistruct() *p.Grammar {
 	o := p.And(
 		// Parse opening sentinel "!<"
-		openSentinel(),
-		skipSpace(),
+		OpenSentinel(),
+		SkipSpace(),
 
 		// Parse our log-level priority
-		p.Tag("priority", priorityInt()),
-		skipSpace(),
+		p.Tag("priority", PriorityInt()),
+		SkipSpace(),
 
 		// Parse our tag list "[tag1:tag2:tag3]"
-		p.Tag("tags", tags()),
-		skipSpace(),
+		p.Tag("tags", Tags()),
+		SkipSpace(),
 
 		// Parse our attribute set "{ key=val key2=val2 }"
-		p.Tag("attrs", attrs()),
-		skipSpace(),
+		p.Tag("attrs", Attrs()),
+		SkipSpace(),
 
 		// Parse the ending sentinel ">!"
-		endSentinel(),
+		EndSentinel(),
 	)
 
 	o.Node(func(m p.Match) (p.Match, error) {
@@ -66,7 +66,7 @@ func semistruct_parser() *p.Grammar {
 
 // Parse the log level priority indicator; this can only be an integer
 // from 0 to 9
-func priorityInt() *p.Grammar {
+func PriorityInt() *p.Grammar {
 	o := p.Set("0-9")
 	o.Node(func(m p.Match) (p.Match, error) {
 		v, err := strconv.ParseInt(p.String(m), 10, 64)
@@ -81,7 +81,7 @@ func priorityInt() *p.Grammar {
 
 // Parse zero or more characters that are alpha-numeric (note, \w
 // includes the underscore).
-func alphaNum() *p.Grammar {
+func AlphaNum() *p.Grammar {
 	return p.Mult(
 		0, 0, p.Set("\\w\\-"),
 	)
@@ -90,7 +90,7 @@ func alphaNum() *p.Grammar {
 // Parse zero or more characters that are alpha-numeric, space
 // characters, and special characters (note, \w includes the
 // underscore).
-func alphaNumSpecial() *p.Grammar {
+func AlphaNumSpecial() *p.Grammar {
 	return p.Mult(
 		0, 0,
 		p.Set("\\w\\s\\-~`!@#:;\\$%^&\\*\\(\\)\\+=\\?\\\\/><,\\.\\{\\}\\[\\]\\|'"),
@@ -98,51 +98,51 @@ func alphaNumSpecial() *p.Grammar {
 }
 
 // Parse zero or more characters that are alpha and underscore.
-func alpha() *p.Grammar {
+func Alpha() *p.Grammar {
 	return p.Mult(
 		0, 0, p.Set("a-zA-Z_"),
 	)
 }
 
 // Parse a alphaSpecial string wrapped in double quotes.
-func quotedStr() *p.Grammar {
+func QuotedStr() *p.Grammar {
 	return p.And(
 		p.Ignore(p.Lit("\"")),
-		alphaNumSpecial(),
+		AlphaNumSpecial(),
 		p.Ignore(p.Lit("\"")),
 	)
 }
 
 // Consume the opening sentinel "!<".
-func openSentinel() *p.Grammar {
+func OpenSentinel() *p.Grammar {
 	return p.Ignore(
 		p.And(p.Lit("!"), p.Lit("<")),
 	)
 }
 
 // Consume the ending sentinel ">!".
-func endSentinel() *p.Grammar {
+func EndSentinel() *p.Grammar {
 	return p.Ignore(
 		p.And(p.Lit(">"), p.Lit("!")),
 	)
 }
 
 // Consume whitespace.
-func skipSpace() *p.Grammar {
+func SkipSpace() *p.Grammar {
 	return p.Ignore(
 		p.Mult(0, 0, p.Set("\\s")),
 	)
 }
 
 // Parse zero or more tag atoms separated by a colon.
-func tag() *p.Grammar {
+func Tag() *p.Grammar {
 	o := p.Optional(
 		p.And(
-			p.Tag("tag", alphaNum()),
+			p.Tag("tag", AlphaNum()),
 			p.Mult(
 				0, 0, p.And(
 					p.Ignore(p.Lit(":")),
-					p.Tag("tag", alphaNum()),
+					p.Tag("tag", AlphaNum()),
 				),
 			),
 		),
@@ -158,11 +158,11 @@ func tag() *p.Grammar {
 	return o
 }
 
-func tags() *p.Grammar {
+func Tags() *p.Grammar {
 	o := p.Optional(
 		p.And(
 			p.Ignore(p.Lit("[")),
-			p.Tag("tag-elements", tag()),
+			p.Tag("tag-elements", Tag()),
 			p.Ignore(p.Lit("]")),
 		),
 	)
@@ -192,13 +192,13 @@ func tags() *p.Grammar {
 // Order within the Or combinator is important here, we want to try
 // matching the quoted alphaNumSpecial value first before then attempt
 // the unquoted plain alphaNum value.
-func kvpair() *p.Grammar {
+func Kvpair() *p.Grammar {
 	o := p.And(
-		p.Tag("key", alphaNum()),
+		p.Tag("key", AlphaNum()),
 		p.Lit("="),
 		p.Tag(
 			"value",
-			p.Or(quotedStr(), alphaNumSpecial()),
+			p.Or(QuotedStr(), AlphaNum()),
 		),
 	)
 
@@ -210,14 +210,14 @@ func kvpair() *p.Grammar {
 	return o
 }
 
-func kvpairs() *p.Grammar {
+func Kvpairs() *p.Grammar {
 	o := p.Optional(
 		p.And(
-			p.Tag("pair", kvpair()),
+			p.Tag("pair", Kvpair()),
 			p.Mult(0, 0,
 				p.And(
 					p.Ignore(p.Set("\\s")),
-					p.Tag("pair", kvpair()),
+					p.Tag("pair", Kvpair()),
 				),
 			),
 		),
@@ -234,13 +234,13 @@ func kvpairs() *p.Grammar {
 	return o
 }
 
-func attrs() *p.Grammar {
+func Attrs() *p.Grammar {
 	o := p.Optional(
 		p.And(
 			p.Ignore(p.Lit("{")),
-			skipSpace(),
-			p.Tag("attrmap", kvpairs()),
-			skipSpace(),
+			SkipSpace(),
+			p.Tag("attrmap", Kvpairs()),
+			SkipSpace(),
 			p.Ignore(p.Lit("}")),
 		),
 	)

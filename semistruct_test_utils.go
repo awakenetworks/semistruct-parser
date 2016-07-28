@@ -62,13 +62,13 @@ func SpecialChar() gopter.Gen {
 	})
 }
 
-// Generate an arbitrary rune selected from the valid set of alphanum
-// and special character runes.
+// Generate an arbitrary string of characters selected from the valid
+// set of alphanum and special character runes.
 //
 // TODO: make sure the unicode character tests are complete and
 // exhaustive for the sieve. This is important for complete property
 // test coverage.
-func AlphaNumSpecial() gopter.Gen {
+func AlphaNumSpecialString() gopter.Gen {
 	return gopter.CombineGens(
 		gen.SliceOf(gen.AlphaNumChar()),
 		gen.SliceOf(SpecialChar()),
