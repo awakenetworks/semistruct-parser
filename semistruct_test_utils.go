@@ -3,8 +3,10 @@ package semistruct
 import (
 	"fmt"
 	"github.com/leanovate/gopter"
+	"github.com/leanovate/gopter/gen"
 	"reflect"
 	"strings"
+	"unicode"
 )
 
 func mkAttrStr(m map[string]string, quoted bool) string {
@@ -18,7 +20,7 @@ func mkAttrStr(m map[string]string, quoted bool) string {
 		}
 		acc = append(acc, st)
 	}
-	return fmt.Sprint("{", strings.Join(acc[:], " "), "}")
+	return fmt.Sprint("{ ", strings.Join(acc[:], " "), " }")
 }
 
 func mkTagStr(t []string) string {
@@ -28,6 +30,64 @@ func mkTagStr(t []string) string {
 
 func mkLogLine(priority int16, tags string, attrs string) string {
 	return fmt.Sprintf("!< %d %s %s >!", priority, tags, attrs)
+}
+
+// TODO: their primary example of combining the rune generators is
+// with the Frequency function but I don't actually want to use that
+// in order to compose all of these rune generators. CombineGens
+// doesn't like these RuneRanges so I think I have to put each one
+// into a separate "gen"...
+func SymbolChar() gopter.Gen {
+	return gen.Frequency(map[int]gopter.Gen{
+		0: gen.RuneRange('#', '/'),
+		1: gen.RuneRange(':', '?'),
+		2: gen.RuneRange('{', '~'),
+		3: gen.RuneRange('[', '_'),
+		4: gen.RuneRange('@', '@'),
+		5: gen.RuneRange('`', '`'),
+	})
+}
+
+func AlphaNumSymbol() gopter.Gen {
+	return gopter.CombineGens(
+		gen.SliceOf(gen.AlphaNumChar()),
+		gen.SliceOf(SymbolChar()),
+	).Map(func(values []interface{}) string {
+		alpha := values[0].([]rune)
+		symb := values[1].([]rune)
+		return string(append(alpha, symb...))
+	}).SuchThat(func(str string) bool {
+		for _, ch := range str {
+			if !unicode.IsLetter(ch) &&
+				!unicode.IsDigit(ch) &&
+				!unicode.Is(unicode.Punct, ch) &&
+				!unicode.Is(unicode.Symbol, ch) &&
+				!unicode.Is(unicode.Mark, ch) &&
+				!unicode.Is(unicode.Other, ch) &&
+				!unicode.Is(unicode.Space, ch) {
+
+				return false
+			}
+		}
+		return true
+	}).WithShrinker(gen.StringShrinker)
+}
+
+// Because this isn't exported by gopter...grrr
+func genString(runeGen gopter.Gen, runeSieve func(ch rune) bool) gopter.Gen {
+	return gen.SliceOf(runeGen).Map(runesToString).SuchThat(func(v string) bool {
+		for _, ch := range v {
+			if !runeSieve(ch) {
+				return false
+			}
+		}
+		return true
+	}).WithShrinker(gen.StringShrinker)
+}
+
+// Because this isn't exported by gopter...grrr
+func runesToString(v []rune) string {
+	return string(v)
 }
 
 func MapOf(keyGen gopter.Gen, valGen gopter.Gen) gopter.Gen {

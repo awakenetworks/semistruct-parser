@@ -20,9 +20,12 @@ var tests = []testpair{
 	{`!< 6 [cl2:filestore:notify] { file="cas%20AV_!AA%20nvvpa.jpg" } >!`},
 	{`!< 0 [cl2:filestore:notify] { file2="some blah.jpg" } >!`},
 	{`!< 2 [cl2:filestore:notify] { file2="some blah.jpg" } >!`},
+	{`!< 2 [cl2:filestore:notify] { file2="some bl\ah.jpg" } >!`},
+	{`!< 2 [cl2:filestore:notify] { file2="some bl|ah.jpg" } >!`},
 	{`!< 2 { file2="some blah.jpg" } >!`},
 	{`!< 2 [cl2:filestore:notify] >!`},
 	{`!< 2 >!`},
+	{"!< 3 [blah] { flfanhb2x6ubmerr=\"kL]_:;\" } >!"},
 }
 
 func TestParser(t *testing.T) {
@@ -117,7 +120,7 @@ func TestParserProperties(t *testing.T) {
 			res, _ := p.ParseString(l)
 			return res != nil
 		},
-		MapOf(gen.Identifier(), gen.AlphaString()),
+		MapOf(gen.Identifier(), AlphaNumSymbol()),
 	))
 
 	// TODO: provide a shrinker

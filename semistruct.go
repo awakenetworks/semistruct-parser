@@ -58,7 +58,7 @@ func alphaNum() *p.Grammar {
 func alphaSpecial() *p.Grammar {
 	return p.Mult(
 		0, 0,
-		p.Set("\\w\\s\\-~`!@#$%^&*()+=?/><,.{}[]|'\\"),
+		p.Set("\\w\\s\\-~`!@#:;\\$%^&\\*\\(\\)\\+=\\?\\\\/><,\\.\\{\\}\\[\\]\\|'"),
 	)
 }
 
