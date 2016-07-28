@@ -10,7 +10,20 @@ Here is an example of a semistructured line that, when parsed by the top-level
 `ParseSemistruct` combinator, emits a struct of standard Go data structures
 representing the three primary fields:
 
-`!< 8 [db3:slave] { region="us-east-d zone=2" uuid=3c79bfc0-4b27-4c99-a952-8f435bbf0514 } >!`
+`!< 8 [db3:slave] { region="us-east-d z2" uuid=3c79bfc0-4b27-4c99-a952-8f435bbf0514 } >!`
 
 The parser looks for the beginning sentinel character sequence `!<` and finishes
 when it finds the ending sentinel character sequence `>!`.
+
+The three primary types are a single-digit log level priority indicator, a list
+of tags separated by a single colon (these may be alphanum with an underscore
+and a hyphen), and an unordered container or map of key value attribute
+pairs. The attribute key has the same character constraints as the tag values
+(alphanum with an underscore and a hyphen) and there are two types of attribute
+values supported:
+
+1. Unquoted with the same character constraints as the keys
+2. Quoted with the following character classes allowed:
+  - Alphanum
+  - All special characters _except for_ the double quote
+  - Whitespace characters
