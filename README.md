@@ -1,8 +1,19 @@
 # Welcome!
 
 `semistruct-parse` is a project providing a parser for semistructured lines of
-text. These are primarily used in a custom journald logging
-driver for the purpose of feeding semistructured data into journald from docker.
+text. These are primarily used in a custom journald logging driver for the
+purpose of feeding semistructured data into journald from docker.
+
+## Testing
+
+You need the following dependencies in order to run the test suite:
+
+- `github.com/leanovate/gopter`
+- `github.com/andyleap/parser`
+
+There is a small hand-ful of hand-written unit tests for the log lines we
+expected to be emitting and then a suite of property tests for each field of the
+semistructured log line, using `gopter` for the framework.
 
 ## The Format
 
