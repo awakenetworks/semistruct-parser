@@ -21,7 +21,7 @@ var tests = []testpair{
 	{`!< 0 [cl2:filestore:notify] { file2="some blah.jpg" } >!`},
 	{`!< 2 [cl2:filestore:notify] { file2="some blah.jpg" } >!`},
 	{`!< 2 [cl2:filestore:notify] { file2="some bl\ah.jpg" } >!`},
-	{`!< 2 [cl2:filestore:notify] { file2="some bl|ah.jpg" } >!`},
+	{`!< 2 [cl2:filestore:notify] { file2="some bl|ah.jpg" } >! ** (process:4707): WARNING **: send_infos_cb: No such interface 'org.gtk.vfs.Enumerator' on object at path /org/gtk/vfs/client/enumerator/385 (g-dbus-error-quark, 19)`},
 	{`!< 2 { file2="some blah.jpg" } >!`},
 	{`!< 2 [cl2:filestore:notify] >!`},
 	{`!< 2 >!`},
