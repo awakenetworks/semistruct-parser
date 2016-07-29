@@ -22,10 +22,6 @@ var tests = []testpair{
 	{`!< 2 [cl2:filestore:notify] { file2="some blah.jpg" } >!`},
 	{`!< 2 [cl2:filestore:notify] { file2="some bl\ah.jpg" } >!`},
 	{`!< 2 [cl2:filestore:notify] { file2="some bl|ah.jpg" } >!`},
-	{"!< 2 [ddd] { wnvqxcvsUppqyParnl=\"rtb7ctfjR3ybgro`@@@}|@                                                                                            \" ckgqpOa=\"tFsodu7C[[`@*}\" dewubuaac3gajfhL=\"0dj9NwmvQMwzlmbhb+^@:|@@<./}`|']~                       \" efQudXI5eswnu3v=\"xfhuv`?`:>`>__@[<`[@`                 \" wersw5azw9tF9sc7ivt=\"vsoGza-;}#,/~@@                  \" mrUoVvgdng=\"o0guce2vjlvlHyzt`;+|{~@                                                                   \" p=\"}~$:]@~]{^`##@````                                                                               \" hbwuquo=\"ca211iUcnoqfAmddxc@                                                          \" yplekqxxgdYmyd=\"eqg78wkpjbjs`=,`@>~``%@<|`{;?                 \" } >!"},
-
-	{"!< 4 [tag1:tag2] { vvfxujjnxbr=\"oelfxuefiaTtgj                                                   `<*@@&]:`^#@}}}\" x8esYmevyoVcdmfasbjp=\"tqmtusczeofhHi                  +@&`}*\" } >!"},
-	{`!< 4 [tag1:tag2] { ucxL="w5zTiaxrr4wNIg         :=|@%@~#<@" unpqiq="jwy                                               @]|_#_}*\@=]" j8="wFbvusnvxtajUprAsf                      >?@[,:_[[?@@#_<" zxearpf="uD9vwN2b8gN04oR                                  _<[^~@~@@~@" vymurc="m8Etrca>*%=@@-(" x="byvb4Sufzz                               \<]/']@:@@{?@~" jNNcvx="                     ,:@-]^-|" } >!`},
 	{`!< 2 { file2="some blah.jpg" } >!`},
 	{`!< 2 [cl2:filestore:notify] >!`},
 	{`!< 2 >!`},
