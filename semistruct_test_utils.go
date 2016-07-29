@@ -62,6 +62,19 @@ func SpecialChar() gopter.Gen {
 	})
 }
 
+// TODO: figure out how to compose the two rune generators for the two
+// specific characters we want (space and tab) - I'm doing it via the
+// frequency generator and the RuneRange generator.
+func WhiteSpaceChar() gopter.Gen {
+	return gen.Frequency(map[int]gopter.Gen{
+		// Generate a SPACE rune
+		0: gen.RuneRange(32, 32),
+
+		// Generate a TAB rune
+		9: gen.RuneRange(9, 9),
+	})
+}
+
 // Generate an arbitrary string of characters selected from the valid
 // set of alphanum and special character runes.
 //
@@ -72,10 +85,11 @@ func AlphaNumSpecialString() gopter.Gen {
 	return gopter.CombineGens(
 		gen.SliceOf(gen.AlphaNumChar()),
 		gen.SliceOf(SpecialChar()),
+		gen.SliceOf(WhiteSpaceChar()),
 	).Map(func(values []interface{}) string {
-		alpha := values[0].([]rune)
-		symb := values[1].([]rune)
-		return string(append(alpha, symb...))
+		v := append(values[0].([]rune), values[2].([]rune)...)
+		v = append(v, values[1].([]rune)...)
+		return string(v)
 	}).SuchThat(func(str string) bool {
 		for _, ch := range str {
 			if !unicode.IsLetter(ch) &&
@@ -84,7 +98,7 @@ func AlphaNumSpecialString() gopter.Gen {
 				!unicode.Is(unicode.Symbol, ch) &&
 				!unicode.Is(unicode.Mark, ch) &&
 				!unicode.Is(unicode.Other, ch) &&
-				!unicode.Is(unicode.Space, ch) {
+				!unicode.IsSpace(ch) {
 
 				return false
 			}
