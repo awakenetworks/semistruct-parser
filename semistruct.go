@@ -93,7 +93,7 @@ func AlphaNum() *p.Grammar {
 func AlphaNumSpecial() *p.Grammar {
 	return p.Mult(
 		0, 0,
-		p.Set("\\w\\s\\-~`!@#:;\\$%^&\\*\\(\\)\\+=\\?\\\\/><,\\.\\{\\}\\[\\]\\|'"),
+		p.Set("\\w\\-~ `\\t!@#:;\\$%^&\\*\\(\\)\\+=\\?\\\\/><,\\.\\{\\}\\[\\]\\|'"),
 	)
 }
 
@@ -130,7 +130,7 @@ func EndSentinel() *p.Grammar {
 // Consume whitespace.
 func SkipSpace() *p.Grammar {
 	return p.Ignore(
-		p.Mult(0, 0, p.Set("\\s")),
+		p.Mult(0, 0, p.Set("\\t ")),
 	)
 }
 
@@ -239,7 +239,7 @@ func Kvpairs() *p.Grammar {
 			p.Tag("pair", Kvpair()),
 			p.Mult(0, 0,
 				p.And(
-					p.Ignore(p.Set("\\s")),
+					SkipSpace(),
 					p.Tag("pair", Kvpair()),
 				),
 			),
