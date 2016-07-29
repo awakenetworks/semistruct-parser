@@ -28,6 +28,7 @@ var tests = []testpair{
 	{"!< 3 [blah] { flfanhb2x6ubmerr=\"kL]_:;\" } >!"},
 }
 
+// Iterate over the hand-written tests and attempt to parse each line.
 func TestParser(t *testing.T) {
 	p := ParseSemistruct()
 
@@ -41,18 +42,20 @@ func TestParser(t *testing.T) {
 	}
 }
 
-// Gopter property tests.
+// Property tests for a whole semistructured log line and for each
+// field.
 func TestParserProperties(t *testing.T) {
 	p := ParseSemistruct()
-
 	parameters := gopter.DefaultTestParameters()
 
+	// Instantiate a configuration for the *whole* semistructured log
+	// line parser.
 	parameters.MinSuccessfulTests = 100
-	logLineProperties := gopter.NewProperties(parameters)
+	wholeProperty := gopter.NewProperties(parameters)
 
 	// Test the whole log line parsing behavior, each property is
 	// generated and composed together then a parse is attempted.
-	logLineProperties.Property("arbitrary log line", prop.ForAll(
+	wholeProperty.Property("arbitrary log line", prop.ForAll(
 		func(priority int16, tags []string, attrs map[string]string) bool {
 			l := mkLogLine(
 				priority,
@@ -63,19 +66,19 @@ func TestParserProperties(t *testing.T) {
 			return res != nil
 		},
 		gen.Int16Range(0, 9).WithLabel("priority"),
-		gen.SliceOf(gen.Identifier()),
-		MapOf(gen.Identifier(), gen.AlphaString()),
+		gen.SliceOf(gen.Identifier()).WithLabel("tags"),
+		MapOf(gen.Identifier(), gen.AlphaString()).WithLabel("attributes"),
 	))
 
-	logLineProperties.TestingRun(t)
-
+	// Instantiate a configuration for individual property tests of
+	// each field.
 	parameters.MinSuccessfulTests = 5000
-	properties := gopter.NewProperties(parameters)
+	fieldProperties := gopter.NewProperties(parameters)
 
 	// Test parsing a log line arbitrarily generating just a single
 	// property of each "piece" of a log line (the priority, tags, or
 	// attributes).
-	properties.Property("log level priority indicator", prop.ForAll(
+	fieldProperties.Property("arbitrary log level priority indicator", prop.ForAll(
 		func(priority int16) bool {
 			l := mkLogLine(
 				priority,
@@ -91,7 +94,7 @@ func TestParserProperties(t *testing.T) {
 		gen.Int16Range(0, 9).WithLabel("priority"),
 	))
 
-	properties.Property("arbitrary tags", prop.ForAll(
+	fieldProperties.Property("arbitrary tags", prop.ForAll(
 		func(tags []string) bool {
 			l := mkLogLine(
 				4,
@@ -105,11 +108,11 @@ func TestParserProperties(t *testing.T) {
 			res, _ := p.ParseString(l)
 			return res != nil
 		},
-		gen.SliceOf(gen.Identifier()),
+		gen.SliceOf(gen.Identifier()).WithLabel("tags"),
 	))
 
 	// TODO: provide a shrinker
-	properties.Property("arbitrary attributes with quoted values", prop.ForAll(
+	fieldProperties.Property("arbitrary attributes with quoted values", prop.ForAll(
 		func(attrs map[string]string) bool {
 			l := mkLogLine(
 				4,
@@ -120,11 +123,11 @@ func TestParserProperties(t *testing.T) {
 			res, _ := p.ParseString(l)
 			return res != nil
 		},
-		MapOf(gen.Identifier(), AlphaNumSpecialString()),
+		MapOf(gen.Identifier(), AlphaNumSpecialString()).WithLabel("attributes"),
 	))
 
 	// TODO: provide a shrinker
-	properties.Property("arbitrary attributes with unquoted values", prop.ForAll(
+	fieldProperties.Property("arbitrary attributes with unquoted values", prop.ForAll(
 		func(attrs map[string]string) bool {
 			l := mkLogLine(
 				4,
@@ -135,8 +138,10 @@ func TestParserProperties(t *testing.T) {
 			res, _ := p.ParseString(l)
 			return res != nil
 		},
-		MapOf(gen.Identifier(), gen.Identifier()),
+		MapOf(gen.Identifier(), gen.Identifier()).WithLabel("attributes"),
 	))
 
-	properties.TestingRun(t)
+	// Run the configured property tests!!
+	wholeProperty.TestingRun(t)
+	fieldProperties.TestingRun(t)
 }
