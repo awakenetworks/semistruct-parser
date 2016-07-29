@@ -38,3 +38,6 @@ values supported:
   - Alphanum
   - All special characters _except for_ the double quote
   - Whitespace characters
+  
+The attribute keys must follow the journald constraints which means it must
+begin with a letter and contain only uppercase letters, digits, and underscores.

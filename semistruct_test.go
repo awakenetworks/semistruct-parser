@@ -13,19 +13,19 @@ type testpair struct {
 
 // Hand-written unit tests for common cases this human can think of.
 var tests = []testpair{
-	{`!< 2 [cl7323:featstore:sess_fun] { one=two dos="wah=hh-77" } >!`},
-	{`!< 7 [local:pktproc:parsePkt] { proto=icmp error="unassigned_type" action=dropped } >!`},
-	{`!< 4 [cl610:featstore:sess_fun] { unknown_sess=3e0a5ae3-7c2f-454e-828c-d838a18d5d8e } >!`},
-	{`!< 0 [cl2] { unstruct_msg="some random debugging spam" } >!`},
-	{`!< 6 [cl2:filestore:notify] { file="cas%20AV_!AA%20nvvpa.jpg" } >!`},
-	{`!< 0 [cl2:filestore:notify] { file2="some blah.jpg" } >!`},
-	{`!< 2 [cl2:filestore:notify] { file2="some blah.jpg" } >!`},
-	{`!< 2 [cl2:filestore:notify] { file2="some bl\ah.jpg" } >!`},
-	{`!< 2 [cl2:filestore:notify] { file2="some bl|ah.jpg" } >! ** (process:4707): WARNING **: send_infos_cb: No such interface 'org.gtk.vfs.Enumerator' on object at path /org/gtk/vfs/client/enumerator/385 (g-dbus-error-quark, 19)`},
-	{`!< 2 { file2="some blah.jpg" } >!`},
+	{`!< 2 [cl7323:featstore:sess_fun] { ONE=two DOS="wah=hh-77" } >!`},
+	{`!< 7 [local:pktproc:parsePkt] { PROTO=icmp ERROR="unassigned_type" ACTION=dropped } >!`},
+	{`!< 4 [cl610:featstore:sess_fun] { UNKNOWN_SESS=3e0a5ae3-7c2f-454e-828c-d838a18d5d8e } >!`},
+	{`!< 0 [cl2] { UNSTRUCT_MSG="some random debugging spam" } >!`},
+	{`!< 6 [cl2:filestore:notify] { FILE="cas%20AV_!AA%20nvvpa.jpg" } >!`},
+	{`!< 0 [cl2:filestore:notify] { FILE2="some blah.jpg" } >!`},
+	{`!< 2 [cl2:filestore:notify] { FILE2="some blah.jpg" } >!`},
+	{`!< 2 [cl2:filestore:notify] { FILE2="some bl\ah.jpg" } >!`},
+	{`!< 2 [cl2:filestore:notify] { FILE2="some bl|ah.jpg" } >! ** (process:4707): WARNING **: send_infos_cb: No such interface 'org.gtk.vfs.Enumerator' on object at path /org/gtk/vfs/client/enumerator/385 (g-dbus-error-quark, 19)`},
+	{`!< 2 { FILE2="some blah.jpg" } >!`},
 	{`!< 2 [cl2:filestore:notify] >!`},
 	{`!< 2 >!`},
-	{"!< 3 [blah] { flfanhb2x6ubmerr=\"kL]_:;\" } >!"},
+	{"!< 3 [blah] { FLFANHB2X6UBMERR=\"kL]_:;\" } >!"},
 }
 
 // Iterate over the hand-written tests and attempt to parse each line.
@@ -67,7 +67,7 @@ func TestParserProperties(t *testing.T) {
 		},
 		gen.Int16Range(0, 9).WithLabel("priority"),
 		gen.SliceOf(gen.Identifier()).WithLabel("tags"),
-		MapOf(gen.Identifier(), gen.AlphaString()).WithLabel("attributes"),
+		MapOf(UpperIdentifier(), gen.AlphaString()).WithLabel("attributes"),
 	))
 
 	// Instantiate a configuration for individual property tests of
@@ -84,8 +84,8 @@ func TestParserProperties(t *testing.T) {
 				priority,
 				mkTagStr([]string{"tag1", "tag2"}),
 				mkAttrStr(map[string]string{
-					"proto": "icmp",
-					"uuid":  "3e0a5ae3-7c2f-454e-828c-d838a18d5d8e",
+					"PROTO": "icmp",
+					"UUID":  "3e0a5ae3-7c2f-454e-828c-d838a18d5d8e",
 				}, true),
 			)
 			res, _ := p.ParseString(l)
@@ -100,8 +100,8 @@ func TestParserProperties(t *testing.T) {
 				4,
 				mkTagStr(tags),
 				mkAttrStr(map[string]string{
-					"proto": "icmp",
-					"uuid":  "3e0a5ae3-7c2f-454e-828c-d838a18d5d8e",
+					"PROTO": "icmp",
+					"UUID":  "3e0a5ae3-7c2f-454e-828c-d838a18d5d8e",
 				}, true),
 			)
 
@@ -123,7 +123,7 @@ func TestParserProperties(t *testing.T) {
 			res, _ := p.ParseString(l)
 			return res != nil
 		},
-		MapOf(gen.Identifier(), AlphaNumSpecialString()).WithLabel("attributes"),
+		MapOf(UpperIdentifier(), AlphaNumSpecialString()).WithLabel("attributes"),
 	))
 
 	// TODO: provide a shrinker
@@ -138,7 +138,7 @@ func TestParserProperties(t *testing.T) {
 			res, _ := p.ParseString(l)
 			return res != nil
 		},
-		MapOf(gen.Identifier(), gen.Identifier()).WithLabel("attributes"),
+		MapOf(UpperIdentifier(), gen.Identifier()).WithLabel("attributes"),
 	))
 
 	// Run the configured property tests!!

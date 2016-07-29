@@ -107,6 +107,32 @@ func AlphaNumSpecialString() gopter.Gen {
 	}).WithShrinker(gen.StringShrinker)
 }
 
+// UpperIdentifier generates an arbitrary identifier string.
+//
+// UpperIdentitiers are supposed to start with a letter and contain
+// only uppercase letters, digits, and underscores
+func UpperIdentifier() gopter.Gen {
+	return gopter.CombineGens(
+		gen.SliceOf(gen.AlphaUpperChar()),
+		gen.SliceOf(gen.NumChar()),
+		gen.SliceOf(gen.RuneRange('_', '_')),
+	).Map(func(values []interface{}) string {
+		v := append(values[0].([]rune), values[2].([]rune)...)
+		v = append(v, values[1].([]rune)...)
+		return string(v)
+	}).SuchThat(func(str string) bool {
+		if len(str) < 1 || !unicode.IsUpper(([]rune(str))[0]) {
+			return false
+		}
+		for _, ch := range str {
+			if !unicode.IsUpper(ch) && !unicode.IsDigit(ch) && !unicode.Is(unicode.Punct, ch) {
+				return false
+			}
+		}
+		return true
+	}).WithShrinker(gen.StringShrinker)
+}
+
 // Because this isn't exported by gopter...grrr
 func genString(runeGen gopter.Gen, runeSieve func(ch rune) bool) gopter.Gen {
 	return gen.SliceOf(runeGen).Map(runesToString).SuchThat(func(v string) bool {

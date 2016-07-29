@@ -87,6 +87,14 @@ func AlphaNum() *p.Grammar {
 	)
 }
 
+// Parse zero or more characters that are alpha-numeric (note, \w
+// includes the underscore).
+func AlphaUpperNum() *p.Grammar {
+	return p.Mult(
+		0, 0, p.Set("A-Z0-9_"),
+	)
+}
+
 // Parse zero or more characters that are alpha-numeric, space
 // characters, and special characters (note, \w includes the
 // underscore).
@@ -217,7 +225,7 @@ func Attrs() *p.Grammar {
 
 func Kvpair() *p.Grammar {
 	o := p.And(
-		p.Tag("key", AlphaNum()),
+		p.Tag("key", p.And(p.Set("A-Z0-9"), AlphaUpperNum())),
 		p.Lit("="),
 		p.Tag(
 			"value",
