@@ -3,7 +3,7 @@ package semistruct
 import "strconv"
 import p "github.com/andyleap/parser"
 
-// SemistructLog is the data structure capturing the result of
+// SemistructLog is the data structure representing the result of a
 // successful semistructured log line parse.
 type SemistructLog struct {
 	Priority int64
