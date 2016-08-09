@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-type testpair struct {
+type testPair struct {
 	logline string
 }
 
 // Hand-written unit tests for common cases this human can think of.
-var tests = []testpair{
+var tests = []testPair{
 	{`!< 2 [cl7323:featstore:sess_fun] { ONE=two DOS="wah=hh-77" } >!`},
 	{`!< 7 [local:pktproc:parsePkt] { PROTO=icmp ERROR="unassigned_type" ACTION=dropped } >!`},
 	{`!< 4 [cl610:featstore:sess_fun] { UNKNOWN_SESS=3e0a5ae3-7c2f-454e-828c-d838a18d5d8e } >!`},
@@ -30,11 +30,11 @@ var tests = []testpair{
 
 // Iterate over the hand-written tests and attempt to parse each line.
 func TestParser(t *testing.T) {
-	p := ParseSemistruct()
+	p := NewParseSemistruct()
 
 	for _, pair := range tests {
-		res, _ := p.ParseString(pair.logline)
-		if res == nil {
+		res, err := p.ParseString(pair.logline)
+		if err != nil || res == nil {
 			t.Error(
 				"Parser failed miseraby on this log line: ", pair.logline,
 			)
@@ -45,7 +45,7 @@ func TestParser(t *testing.T) {
 // Property tests for a whole semistructured log line and for each
 // field.
 func TestParserProperties(t *testing.T) {
-	p := ParseSemistruct()
+	p := NewParseSemistruct()
 	parameters := gopter.DefaultTestParameters()
 
 	// Instantiate a configuration for the *whole* semistructured log
@@ -62,8 +62,8 @@ func TestParserProperties(t *testing.T) {
 				mkTagStr(tags),
 				mkAttrStr(attrs, true),
 			)
-			res, _ := p.ParseString(l)
-			return res != nil
+			res, err := p.ParseString(l)
+			return err == nil && res != nil
 		},
 		gen.Int16Range(0, 9).WithLabel("priority"),
 		gen.SliceOf(gen.Identifier()).WithLabel("tags"),
@@ -88,8 +88,8 @@ func TestParserProperties(t *testing.T) {
 					"UUID":  "3e0a5ae3-7c2f-454e-828c-d838a18d5d8e",
 				}, true),
 			)
-			res, _ := p.ParseString(l)
-			return res != nil
+			res, err := p.ParseString(l)
+			return err == nil && res != nil
 		},
 		gen.Int16Range(0, 9).WithLabel("priority"),
 	))
@@ -105,8 +105,8 @@ func TestParserProperties(t *testing.T) {
 				}, true),
 			)
 
-			res, _ := p.ParseString(l)
-			return res != nil
+			res, err := p.ParseString(l)
+			return err == nil && res != nil
 		},
 		gen.SliceOf(gen.Identifier()).WithLabel("tags"),
 	))
@@ -120,8 +120,8 @@ func TestParserProperties(t *testing.T) {
 				mkAttrStr(attrs, true),
 			)
 
-			res, _ := p.ParseString(l)
-			return res != nil
+			res, err := p.ParseString(l)
+			return err == nil && res != nil
 		},
 		MapOf(UpperIdentifier(), AlphaNumSpecialString()).WithLabel("attributes"),
 	))
@@ -135,8 +135,8 @@ func TestParserProperties(t *testing.T) {
 				mkAttrStr(attrs, false),
 			)
 
-			res, _ := p.ParseString(l)
-			return res != nil
+			res, err := p.ParseString(l)
+			return err == nil && res != nil
 		},
 		MapOf(UpperIdentifier(), gen.Identifier()).WithLabel("attributes"),
 	))

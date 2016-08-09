@@ -16,7 +16,7 @@ func mkAttrStr(m map[string]string, q bool) string {
 	var acc []string
 	for k, v := range m {
 		if q {
-			v = fmt.Sprint("\"", v, "\"")
+			v = fmt.Sprintf("%q", v)
 		}
 		acc = append(acc, fmt.Sprintf("%s=%s", k, v))
 	}
