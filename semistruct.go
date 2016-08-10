@@ -2,7 +2,7 @@ package semistruct
 
 import "strconv"
 import p "github.com/andyleap/parser"
-import "fmt"
+import "errors"
 
 // Log is the data structure representing the result of a successful
 // semistructured log line parse.
@@ -51,17 +51,17 @@ func NewLogParser() *p.Grammar {
 		// types can have sane defaults.
 		pr, ok := p.GetTag(m, "priority").(int64)
 		if !ok {
-			return nil, fmt.Errorf("failed getting priority")
+			return nil, errors.New("failed getting priority")
 		}
 
 		tg, ok := p.GetTag(m, "tags").([]string)
 		if !ok {
-			return nil, fmt.Errorf("failed getting tags")
+			return nil, errors.New("failed getting tags")
 		}
 
 		at, ok := p.GetTag(m, "attrs").(map[string]string)
 		if !ok {
-			return nil, fmt.Errorf("failed getting attributes")
+			return nil, errors.New("failed getting attributes")
 		}
 
 		return &Log{pr, tg, at}, nil
