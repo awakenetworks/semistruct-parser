@@ -4,8 +4,8 @@ import "strconv"
 import p "github.com/andyleap/parser"
 import "fmt"
 
-// SemistructLog is the data structure representing the result of a
-// successful semistructured log line parse.
+// Log is the data structure representing the result of a successful
+// semistructured log line parse.
 type Log struct {
 	Priority int64
 	Tags     []string
@@ -234,7 +234,7 @@ func Attrs() *p.Grammar {
 	return o
 }
 
-// Kvpair parses a key value pair that is right-aligned and separated
+// KvPair parses a key value pair that is right-aligned and separated
 // by an equal sign.
 func KvPair() *p.Grammar {
 	o := p.And(
@@ -254,7 +254,7 @@ func KvPair() *p.Grammar {
 	return o
 }
 
-// Kvpairs parses zero or more key value pairs bracketed by curly
+// KvPairs parses zero or more key value pairs bracketed by curly
 // brackets.
 func KvPairs() *p.Grammar {
 	kvPairParser := KvPair()
