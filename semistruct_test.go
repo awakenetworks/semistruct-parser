@@ -30,7 +30,7 @@ var tests = []testPair{
 
 // Iterate over the hand-written tests and attempt to parse each line.
 func TestParser(t *testing.T) {
-	p := NewParseSemistruct()
+	p := NewLogParser()
 
 	for _, pair := range tests {
 		res, err := p.ParseString(pair.logline)
@@ -45,7 +45,7 @@ func TestParser(t *testing.T) {
 // Property tests for a whole semistructured log line and for each
 // field.
 func TestParserProperties(t *testing.T) {
-	p := NewParseSemistruct()
+	p := NewLogParser()
 	parameters := gopter.DefaultTestParameters()
 
 	// Instantiate a configuration for the *whole* semistructured log

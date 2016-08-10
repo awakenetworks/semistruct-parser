@@ -2,10 +2,11 @@ package semistruct
 
 import "strconv"
 import p "github.com/andyleap/parser"
+import "fmt"
 
 // SemistructLog is the data structure representing the result of a
 // successful semistructured log line parse.
-type SemistructLog struct {
+type Log struct {
 	Priority int64
 	Tags     []string
 	Attrs    map[string]string
@@ -16,10 +17,10 @@ type kvPair struct {
 	val string
 }
 
-// NewParseSemistruct instantiates a parser composed of combinators
-// for parsing a semistructured log line into the SemistructLog struct
+// NewLogParser instantiates a parser composed of combinators for
+// parsing a semistructured log line into the SemistructLog struct
 // data type.
-func NewParseSemistruct() *p.Grammar {
+func NewLogParser() *p.Grammar {
 	skipSpace := SkipSpace()
 
 	o := p.And(
@@ -48,11 +49,22 @@ func NewParseSemistruct() *p.Grammar {
 		// If we're parsing, we absolutely want a priority - if that
 		// returns an error then we should return an error; the other
 		// types can have sane defaults.
-		pr := p.GetTag(m, "priority").(int64)
-		tg := p.GetTag(m, "tags").([]string)
-		at := p.GetTag(m, "attrs").(map[string]string)
+		pr, ok := p.GetTag(m, "priority").(int64)
+		if !ok {
+			return nil, fmt.Errorf("failed getting priority")
+		}
 
-		return &SemistructLog{pr, tg, at}, nil
+		tg, ok := p.GetTag(m, "tags").([]string)
+		if !ok {
+			return nil, fmt.Errorf("failed getting tags")
+		}
+
+		at, ok := p.GetTag(m, "attrs").(map[string]string)
+		if !ok {
+			return nil, fmt.Errorf("failed getting attributes")
+		}
+
+		return &Log{pr, tg, at}, nil
 	})
 
 	return o
@@ -177,7 +189,7 @@ func Tags() *p.Grammar {
 	o.Node(func(m p.Match) (p.Match, error) {
 		elems := p.GetTag(m, "tag-elements")
 		if elems == nil {
-			elems = make([]string, 0)
+			elems = []string{}
 		}
 		return elems, nil
 	})
@@ -204,7 +216,7 @@ func Attrs() *p.Grammar {
 		p.And(
 			p.Ignore(p.Lit("{")),
 			SkipSpace(),
-			p.Tag("attrmap", Kvpairs()),
+			p.Tag("attrmap", KvPairs()),
 			SkipSpace(),
 			p.Ignore(p.Lit("}")),
 		),
@@ -224,7 +236,7 @@ func Attrs() *p.Grammar {
 
 // Kvpair parses a key value pair that is right-aligned and separated
 // by an equal sign.
-func Kvpair() *p.Grammar {
+func KvPair() *p.Grammar {
 	o := p.And(
 		p.Tag("key", p.And(p.Set("A-Z0-9"), AlphaUpperNum())),
 		p.Lit("="),
@@ -244,8 +256,8 @@ func Kvpair() *p.Grammar {
 
 // Kvpairs parses zero or more key value pairs bracketed by curly
 // brackets.
-func Kvpairs() *p.Grammar {
-	kvPairParser := Kvpair()
+func KvPairs() *p.Grammar {
+	kvPairParser := KvPair()
 
 	o := p.Optional(
 		p.And(
