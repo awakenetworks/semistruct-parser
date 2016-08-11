@@ -1,9 +1,12 @@
 package semistruct
 
 import (
+	"github.com/andyleap/parser"
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/gen"
 	"github.com/leanovate/gopter/prop"
+	"log"
+	"math/rand"
 	"testing"
 )
 
@@ -65,6 +68,71 @@ func TestParserNegative(t *testing.T) {
 		}
 	}
 }
+
+var result parser.Match
+
+func BenchmarkParserSmall(b *testing.B) {
+	p := NewLogParser()
+	var res parser.Match
+	var err error
+
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		b.StopTimer()
+		i := rand.Intn(len(tests))
+		l := tests[i].logline
+		b.StartTimer()
+
+		res, err = p.ParseString(l)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	result = res
+}
+
+// NOTE: the below benchmark requires a log-lines text file to read
+// from that you have to generate. I did not want to include
+//
+// Make sure we prevent the compiler optimizing out the function call
+// var result parser.Match
+
+// func BenchmarkParser5000(b *testing.B) {
+// 	b.StopTimer()
+
+// 	var res parser.Match
+
+// 	p := NewLogParser()
+
+// 	file, err := os.Open("./test-data/log-lines.txt")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+
+// 	defer file.Close()
+
+// 	r := bufio.NewReader(file)
+
+// 	b.StartTimer()
+// 	for n := 0; n < b.N; n++ {
+// 		line, err := r.ReadString('\n')
+
+// 		if err == io.EOF {
+// 			break
+// 		} else if err != nil {
+// 			log.Fatal(err)
+// 		} else {
+// 			res, err = p.ParseString(line)
+
+// 			if err != nil {
+// 				log.Fatal(err)
+// 			}
+// 		}
+// 	}
+
+// 	result = res
+// }
 
 // Property tests for a whole semistructured log line and for each
 // field.
