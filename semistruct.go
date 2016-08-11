@@ -2,7 +2,6 @@ package semistruct
 
 import "strconv"
 import p "github.com/andyleap/parser"
-import "errors"
 
 // Log is the data structure representing the result of a successful
 // semistructured log line parse.
@@ -16,6 +15,30 @@ type kvPair struct {
 	key string
 	val string
 }
+
+// PriorityParseError is returned when the priority field could not be
+// parsed succssfully and it errored.
+type ErrPriority struct {
+	msg string
+}
+
+func (e *ErrPriority) Error() string { return e.msg }
+
+// TagsParseError is returned when the tags field could not be
+// parsed succssfully and it errored.
+type ErrTags struct {
+	msg string
+}
+
+func (e *ErrTags) Error() string { return e.msg }
+
+// AttributesParseError is returned when the attributes field could
+// not be parsed succssfully and it errored.
+type ErrAttributes struct {
+	msg string
+}
+
+func (e *ErrAttributes) Error() string { return e.msg }
 
 // NewLogParser instantiates a parser composed of combinators for
 // parsing a semistructured log line into the SemistructLog struct
@@ -45,23 +68,19 @@ func NewLogParser() *p.Grammar {
 	)
 
 	o.Node(func(m p.Match) (p.Match, error) {
-
-		// If we're parsing, we absolutely want a priority - if that
-		// returns an error then we should return an error; the other
-		// types can have sane defaults.
 		pr, ok := p.GetTag(m, "priority").(int64)
 		if !ok {
-			return nil, errors.New("failed getting priority")
+			return nil, &ErrPriority{"failed getting priority"}
 		}
 
 		tg, ok := p.GetTag(m, "tags").([]string)
 		if !ok {
-			return nil, errors.New("failed getting tags")
+			return nil, &ErrTags{"failed getting tags"}
 		}
 
 		at, ok := p.GetTag(m, "attrs").(map[string]string)
 		if !ok {
-			return nil, errors.New("failed getting attributes")
+			return nil, &ErrAttributes{"failed getting attributes"}
 		}
 
 		return &Log{pr, tg, at}, nil

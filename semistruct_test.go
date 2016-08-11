@@ -28,6 +28,14 @@ var tests = []testPair{
 	{"!< 3 [blah] { FLFANHB2X6UBMERR=\"kL]_:;\" } >!"},
 }
 
+var negativeTests = []testPair{
+	{`!< eatstore:sess_fun] { ONE=two DOS="wah=hh-77" } >!`},
+	{`no line to parse at all`},
+	{`!< 4 [cl610:featstore:sess_fun] UNKNOWN_SESS=3e0a5ae3-7c2f-454e-828c-d838a18d5d8e >!`},
+	{`!< 4 cl610:featstore:sess_fun { UNKNOWN_SESS=3e0a5ae3-7c2f-454e-828c-d838a18d5d8e } >!`},
+	{`!< f [cl610:featstore:sess_fun] { UNKNOWN_SESS=3e0a5ae3-7c2f-454e-828c-d838a18d5d8e } >!`},
+}
+
 // Iterate over the hand-written tests and attempt to parse each line.
 func TestParser(t *testing.T) {
 	p := NewLogParser()
@@ -36,7 +44,23 @@ func TestParser(t *testing.T) {
 		res, err := p.ParseString(pair.logline)
 		if err != nil || res == nil {
 			t.Error(
-				"Parser failed miseraby on this log line: ", pair.logline,
+				"Parser failed miserably on this log line: ", pair.logline,
+			)
+		}
+	}
+}
+
+func TestParserNegative(t *testing.T) {
+	p := NewLogParser()
+
+	for _, pair := range tests {
+		res, err := p.ParseString(pair.logline)
+
+		// Res should always be nil (nothing to parse) and err should
+		// be nil too - if we encounter an error then it's a failure
+		if err != nil && res != nil {
+			t.Error(
+				"Parser failed: ", err,
 			)
 		}
 	}
