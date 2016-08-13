@@ -1,7 +1,6 @@
 package semistruct
 
 import (
-	"github.com/andyleap/parser"
 	"github.com/leanovate/gopter"
 	"github.com/leanovate/gopter/gen"
 	"github.com/leanovate/gopter/prop"
@@ -69,12 +68,8 @@ func TestParserNegative(t *testing.T) {
 	}
 }
 
-var result parser.Match
-
 func BenchmarkParserSmall(b *testing.B) {
 	p := NewLogParser()
-	var res parser.Match
-	var err error
 
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
@@ -83,13 +78,15 @@ func BenchmarkParserSmall(b *testing.B) {
 		l := tests[i].logline
 		b.StartTimer()
 
-		res, err = p.ParseString(l)
+		res, err := p.ParseString(l)
 		if err != nil {
 			log.Fatal(err)
 		}
-	}
 
-	result = res
+		if res == nil {
+			log.Fatal("parser failed")
+		}
+	}
 }
 
 // NOTE: the below benchmark requires a log-lines text file to read
